@@ -22,6 +22,8 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
 
     private static final String GLOBAL_JAVA_CLASS_NAME = "Main.java";
 
+    private static final long TIME_OUT = 5000L;
+
     public static final Integer RUNNING = 1;
     public static final Integer DONE = 2;
     public static final Integer FAILED = 3;
@@ -80,6 +82,15 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
             String runCmd = String.format("java -Dfile.encoding=UTF-8 -cp %s Main %s", userCodeParentPath, inputArgs);
             try {
                 Process runProcess = Runtime.getRuntime().exec(runCmd);
+                new Thread(()->{
+                    try{
+                        Thread.sleep(TIME_OUT);
+                        System.out.println("超时中断");
+                        runProcess.destroy();
+                    } catch (InterruptedException e) {
+                        getErrorResponse(e);
+                    }
+                }).start();
                 ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(runProcess, "执行");// 执行并获取编译信息
 //                ExecuteMessage executeMessage = ProcessUtils.runInteractProcessAndGetMessage(runProcess, inputArgs);
                 System.out.println(executeMessage);
