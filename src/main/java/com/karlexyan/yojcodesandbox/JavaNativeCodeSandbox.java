@@ -22,15 +22,16 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
 
     private static final String GLOBAL_JAVA_CLASS_NAME = "Main.java";
 
-    public static final Integer ACCEPTED = 1;
+    public static final Integer RUNNING = 1;
+    public static final Integer DONE = 2;
     public static final Integer FAILED = 3;
 
     public static void main(String[] args) {
         JavaNativeCodeSandbox javaNativeCodeSandbox = new JavaNativeCodeSandbox();
         ExecuteCodeRequest executeCodeRequest = new ExecuteCodeRequest();
         executeCodeRequest.setInputList(Arrays.asList("1 2", "1 3"));
-//        String code = ResourceUtil.readStr("testCode/simpleComputeArgs/Main.java", StandardCharsets.UTF_8);
-        String code = ResourceUtil.readStr("testCode/simpleComputeByInteractive/Main.java", StandardCharsets.UTF_8);
+        String code = ResourceUtil.readStr("testCode/simpleComputeArgs/Main.java", StandardCharsets.UTF_8);
+//        String code = ResourceUtil.readStr("testCode/simpleComputeByInteractive/Main.java", StandardCharsets.UTF_8);
 //        String code = ResourceUtil.readStr("testCode/simpleCompute/Main.java", StandardCharsets.UTF_8);
         executeCodeRequest.setCode(code);
         executeCodeRequest.setLanguage("java");
@@ -64,7 +65,8 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
             ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(compileProcess, "编译");  // 调用工具类，编译并获取编译信息
             System.out.println(executeMessage);
         } catch (Exception e) {
-            e.printStackTrace();
+            //  6. 错误处理，提升程序健壮性
+            return getErrorResponse(e);
         }
 
         //  3. 执行代码，得到输出结果
@@ -73,12 +75,13 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
             String runCmd = String.format("java -Dfile.encoding=UTF-8 -cp %s Main %s", userCodeParentPath, inputArgs);
             try {
                 Process runProcess = Runtime.getRuntime().exec(runCmd);
-//                ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(runProcess, "执行");// 执行并获取编译信息
-                ExecuteMessage executeMessage = ProcessUtils.runInteractProcessAndGetMessage(runProcess, inputArgs);
+                ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(runProcess, "执行");// 执行并获取编译信息
+//                ExecuteMessage executeMessage = ProcessUtils.runInteractProcessAndGetMessage(runProcess, inputArgs);
                 System.out.println(executeMessage);
                 executeMessageList.add(executeMessage);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                //  6. 错误处理，提升程序健壮性
+                getErrorResponse(e);
             }
         }
 
@@ -104,7 +107,7 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
 
         // 正常运行完成
         if (outputList.size() == executeMessageList.size()) {
-            executeCodeResponse.setStatus(ACCEPTED);
+            executeCodeResponse.setStatus(RUNNING);  // 设置判题状态为判题中
         }
         executeCodeResponse.setOutputList(outputList);
         JudgeInfo judgeInfo = new JudgeInfo();
@@ -120,7 +123,21 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
             System.out.println("删除" + (del ? "成功" : "失败"));
         }
 
-        //  6. 错误处理，提升程序健壮性
-        return null;
+        return executeCodeResponse;
+    }
+
+    /**
+     * 获取错误响应
+     * @param e
+     * @return
+     */
+    private ExecuteCodeResponse getErrorResponse(Throwable e){
+        ExecuteCodeResponse executeCodeResponse= new ExecuteCodeResponse();
+        executeCodeResponse.setOutputList(new ArrayList<>());
+        executeCodeResponse.setMessage(e.getMessage());
+        // 代码沙箱错误，编译错误，修改状态为判题完成
+        executeCodeResponse.setStatus(DONE);
+        executeCodeResponse.setJudgeInfo(new JudgeInfo());
+        return executeCodeResponse;
     }
 }
