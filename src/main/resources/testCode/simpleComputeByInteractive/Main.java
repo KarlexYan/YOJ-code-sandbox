@@ -1,8 +1,6 @@
-package com.karlexyan.yojcodesandbox;
-
 import java.util.Scanner;
 
-public class SimpleCompute {
+public class Main {
 
     public static void main(String[] args) {
         Scanner reader = new Scanner(System.in);
