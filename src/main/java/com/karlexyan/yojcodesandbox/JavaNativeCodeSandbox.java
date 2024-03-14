@@ -22,8 +22,8 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
 
     private static final String GLOBAL_JAVA_CLASS_NAME = "Main.java";
 
-    public static final Integer ACCEPTED =  1;
-    public static final Integer FAILED =  3;
+    public static final Integer ACCEPTED = 1;
+    public static final Integer FAILED = 3;
 
     public static void main(String[] args) {
         JavaNativeCodeSandbox javaNativeCodeSandbox = new JavaNativeCodeSandbox();
@@ -63,21 +63,21 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
             Process compileProcess = Runtime.getRuntime().exec(compileCmd);
             ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(compileProcess, "编译");  // 调用工具类，编译并获取编译信息
             System.out.println(executeMessage);
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         //  3. 执行代码，得到输出结果
         List<ExecuteMessage> executeMessageList = new ArrayList<>();
-        for (String inputArgs : inputList){
+        for (String inputArgs : inputList) {
             String runCmd = String.format("java -Dfile.encoding=UTF-8 -cp %s Main %s", userCodeParentPath, inputArgs);
-            try{
+            try {
                 Process runProcess = Runtime.getRuntime().exec(runCmd);
 //                ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(runProcess, "执行");// 执行并获取编译信息
                 ExecuteMessage executeMessage = ProcessUtils.runInteractProcessAndGetMessage(runProcess, inputArgs);
                 System.out.println(executeMessage);
                 executeMessageList.add(executeMessage);
-            }catch (Exception e){
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
@@ -87,9 +87,9 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
         List<String> outputList = new ArrayList<>(); // 控制台输出List
         // 取用时最大值，便于判断程序是否超时
         long maxTime = 0;
-        for(ExecuteMessage executeMessage : executeMessageList){
+        for (ExecuteMessage executeMessage : executeMessageList) {
             String errorMessage = executeMessage.getErrorMessage();
-            if(StrUtil.isNotBlank(errorMessage)){
+            if (StrUtil.isNotBlank(errorMessage)) {
                 executeCodeResponse.setMessage(errorMessage);
                 // 用户代码出现错误，直接判定失败
                 executeCodeResponse.setStatus(FAILED);
@@ -97,13 +97,13 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
             }
             outputList.add(executeMessage.getMessage());
             Long executeTime = executeMessage.getTime();
-            if(executeTime!=null){
-                maxTime = Math.max(maxTime,executeTime);
+            if (executeTime != null) {
+                maxTime = Math.max(maxTime, executeTime);
             }
         }
 
         // 正常运行完成
-        if(outputList.size() == executeMessageList.size()){
+        if (outputList.size() == executeMessageList.size()) {
             executeCodeResponse.setStatus(ACCEPTED);
         }
         executeCodeResponse.setOutputList(outputList);
@@ -115,6 +115,11 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
         executeCodeResponse.setJudgeInfo(judgeInfo);
 
         //  5. 文件清理，释放空间
+        if (userCodeFile.getParentFile() != null) {
+            boolean del = FileUtil.del(userCodeParentPath);
+            System.out.println("删除" + (del ? "成功" : "失败"));
+        }
+
         //  6. 错误处理，提升程序健壮性
         return null;
     }
