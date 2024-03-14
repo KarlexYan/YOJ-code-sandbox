@@ -41,9 +41,13 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
 
     @Override
     public ExecuteCodeResponse executeCode(ExecuteCodeRequest executeCodeRequest) {
+        ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
         List<String> inputList = executeCodeRequest.getInputList();
         String code = executeCodeRequest.getCode();
         String language = executeCodeRequest.getLanguage();
+
+        // 修改判题状态为判题中
+        executeCodeResponse.setStatus(RUNNING);
 
         //  1. 把代码保存为文件
         String userDir = System.getProperty("user.dir");
@@ -86,7 +90,6 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
         }
 
         //  4. 收集整理输出结果
-        ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
         List<String> outputList = new ArrayList<>(); // 控制台输出List
         // 取用时最大值，便于判断程序是否超时
         long maxTime = 0;
@@ -107,7 +110,7 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
 
         // 正常运行完成
         if (outputList.size() == executeMessageList.size()) {
-            executeCodeResponse.setStatus(RUNNING);  // 设置判题状态为判题中
+            executeCodeResponse.setStatus(DONE);  // 设置判题状态为判题中
         }
         executeCodeResponse.setOutputList(outputList);
         JudgeInfo judgeInfo = new JudgeInfo();
@@ -136,7 +139,7 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
         executeCodeResponse.setOutputList(new ArrayList<>());
         executeCodeResponse.setMessage(e.getMessage());
         // 代码沙箱错误，编译错误，修改状态为判题完成
-        executeCodeResponse.setStatus(DONE);
+        executeCodeResponse.setStatus(FAILED);
         executeCodeResponse.setJudgeInfo(new JudgeInfo());
         return executeCodeResponse;
     }
