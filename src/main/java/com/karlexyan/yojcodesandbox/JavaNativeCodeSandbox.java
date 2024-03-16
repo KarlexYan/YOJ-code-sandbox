@@ -40,19 +40,23 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
     public static final Integer DONE = 2;
     public static final Integer FAILED = 3;
 
+    // 指定 MySecurityManager 的目录
+    public static final String SECURITY_MANAGER_PATH = "D:\\codeSpace\\YOJ\\yoj-code-sandbox\\src\\main\\resources\\security";
+
+    public static final String SECURITY_MANAGER_CLASS_NAME = "MySecurityManager";
+
 
     public static void main(String[] args) {
         JavaNativeCodeSandbox javaNativeCodeSandbox = new JavaNativeCodeSandbox();
         ExecuteCodeRequest executeCodeRequest = new ExecuteCodeRequest();
         executeCodeRequest.setInputList(Arrays.asList("1 2", "1 3"));
-//        String code = ResourceUtil.readStr("testCode/simpleComputeArgs/Main.java", StandardCharsets.UTF_8);
+        String code = ResourceUtil.readStr("testCode/simpleComputeArgs/Main.java", StandardCharsets.UTF_8);
 //        String code = ResourceUtil.readStr("testCode/simpleComputeByInteractive/Main.java", StandardCharsets.UTF_8);
 //        String code = ResourceUtil.readStr("testCode/simpleCompute/Main.java", StandardCharsets.UTF_8);
-        String code = ResourceUtil.readStr("problemCode/SleepError.java", StandardCharsets.UTF_8);
+//        String code = ResourceUtil.readStr("problemCode/SleepError.java", StandardCharsets.UTF_8);
         executeCodeRequest.setCode(code);
         executeCodeRequest.setLanguage("java");
         ExecuteCodeResponse executeCodeResponse = javaNativeCodeSandbox.executeCode(executeCodeRequest);
-        System.out.println(executeCodeResponse);
     }
 
     @Override
@@ -99,7 +103,7 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
         //  3. 执行代码，得到输出结果
         List<ExecuteMessage> executeMessageList = new ArrayList<>();
         for (String inputArgs : inputList) {
-            String runCmd = String.format("java -Dfile.encoding=UTF-8 -cp %s Main %s", userCodeParentPath, inputArgs);
+            String runCmd = String.format("java -Xmx256m -Dfile.encoding=UTF-8 -cp %s;%s -Djava.security.manager=%s Main %s", userCodeParentPath, SECURITY_MANAGER_PATH, SECURITY_MANAGER_CLASS_NAME, inputArgs);
             try {
                 Process runProcess = Runtime.getRuntime().exec(runCmd);
                 new Thread(() -> {
