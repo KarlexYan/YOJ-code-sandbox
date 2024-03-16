@@ -4,6 +4,8 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.dfa.FoundWord;
+import cn.hutool.dfa.WordTree;
 import com.karlexyan.yojcodesandbox.model.ExecuteCodeRequest;
 import com.karlexyan.yojcodesandbox.model.ExecuteCodeResponse;
 import com.karlexyan.yojcodesandbox.model.ExecuteMessage;
@@ -22,11 +24,22 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
 
     private static final String GLOBAL_JAVA_CLASS_NAME = "Main.java";
 
+    private static final List<String> blackList = Arrays.asList("Files", "exec");
+
+    private static final WordTree WORD_TREE;
+
+    static {
+        // 初始化字典树
+        WORD_TREE = new WordTree();
+        WORD_TREE.addWords(blackList);
+    }
+
     private static final long TIME_OUT = 5000L;
 
     public static final Integer RUNNING = 1;
     public static final Integer DONE = 2;
     public static final Integer FAILED = 3;
+
 
     public static void main(String[] args) {
         JavaNativeCodeSandbox javaNativeCodeSandbox = new JavaNativeCodeSandbox();
@@ -48,6 +61,13 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
         List<String> inputList = executeCodeRequest.getInputList();
         String code = executeCodeRequest.getCode();
         String language = executeCodeRequest.getLanguage();
+
+        // 校验代码中是否包含黑名单中的命令
+        FoundWord foundWord = WORD_TREE.matchWord(code);
+        if (foundWord != null) {
+            System.out.println("此文件包含敏感命令：" + foundWord.getFoundWord() + ",禁止执行！");
+            return null;
+        }
 
         // 修改判题状态为判题中
         executeCodeResponse.setStatus(RUNNING);
@@ -82,8 +102,8 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
             String runCmd = String.format("java -Dfile.encoding=UTF-8 -cp %s Main %s", userCodeParentPath, inputArgs);
             try {
                 Process runProcess = Runtime.getRuntime().exec(runCmd);
-                new Thread(()->{
-                    try{
+                new Thread(() -> {
+                    try {
                         Thread.sleep(TIME_OUT);
                         System.out.println("超时中断");
                         runProcess.destroy();
@@ -143,11 +163,12 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
 
     /**
      * 获取错误响应
+     *
      * @param e
      * @return
      */
-    private ExecuteCodeResponse getErrorResponse(Throwable e){
-        ExecuteCodeResponse executeCodeResponse= new ExecuteCodeResponse();
+    private ExecuteCodeResponse getErrorResponse(Throwable e) {
+        ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
         executeCodeResponse.setOutputList(new ArrayList<>());
         executeCodeResponse.setMessage(e.getMessage());
         // 代码沙箱错误，编译错误，修改状态为判题完成
