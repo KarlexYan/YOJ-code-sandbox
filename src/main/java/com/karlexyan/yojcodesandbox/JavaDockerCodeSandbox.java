@@ -134,6 +134,7 @@ public class JavaDockerCodeSandbox implements CodeSandbox {
                 .withAttachStdout(true)
                 .withTty(true)  // 开启一个交互终端
                 .withNetworkDisabled(true) // 禁用网络
+                .withReadonlyRootfs(true)  // 禁止用户使用root权限
                 .exec();
         String containerId = createContainerResponse.getId();
         System.out.println("创建容器id：" + containerId);
