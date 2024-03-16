@@ -41,7 +41,8 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
     public static final Integer FAILED = 3;
 
     // 指定 MySecurityManager 的目录
-    public static final String SECURITY_MANAGER_PATH = "D:\\codeSpace\\YOJ\\yoj-code-sandbox\\src\\main\\resources\\security";
+    public static final String RESOURCES_PATH = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "resources";
+    public static final String SECURITY_MANAGER_PATH = RESOURCES_PATH + File.separator + "security";
 
     public static final String SECURITY_MANAGER_CLASS_NAME = "MySecurityManager";
 
@@ -103,7 +104,8 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
         //  3. 执行代码，得到输出结果
         List<ExecuteMessage> executeMessageList = new ArrayList<>();
         for (String inputArgs : inputList) {
-            String runCmd = String.format("java -Xmx256m -Dfile.encoding=UTF-8 -cp %s;%s -Djava.security.manager=%s Main %s", userCodeParentPath, SECURITY_MANAGER_PATH, SECURITY_MANAGER_CLASS_NAME, inputArgs);
+            String runCmd = String.format("java -Xmx256m -Dfile.encoding=UTF-8 -cp %s  Main %s", userCodeParentPath, inputArgs);
+            System.out.println(runCmd);
             try {
                 Process runProcess = Runtime.getRuntime().exec(runCmd);
                 new Thread(() -> {
