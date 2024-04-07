@@ -1,5 +1,6 @@
 package com.karlexyan.yojcodesandbox.Controller;
 
+import com.karlexyan.yojcodesandbox.JavaDockerCodeSandbox;
 import com.karlexyan.yojcodesandbox.JavaNativeCodeSandbox;
 import com.karlexyan.yojcodesandbox.model.ExecuteCodeRequest;
 import com.karlexyan.yojcodesandbox.model.ExecuteCodeResponse;
@@ -17,6 +18,9 @@ import static com.karlexyan.yojcodesandbox.constants.AuthRequest.AUTH_REQUEST_SE
 public class ExecutedController {
     @Resource
     private JavaNativeCodeSandbox javaNativeCodeSandbox;
+
+    @Resource
+    private JavaDockerCodeSandbox javaDockerCodeSandbox;
 
     /**
      * 接口测试
